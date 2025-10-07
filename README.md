@@ -1,7 +1,7 @@
 
 <h1 align="center"> Run Dots.OCR locally with MacOS or Small GPU </h1>
 
-**dots.ocr** is a powerful, multilingual document parser that unifies layout detection and content recognition within a single vision-language model while maintaining good reading order. The offical announced it's using 1.7B LLM foundation, that give us hope
+**[dots.ocr](https://github.com/rednote-hilab/dots.ocr)** is a powerful, multilingual document parser that unifies layout detection and content recognition within a single vision-language model while maintaining good reading order. The offical announced it's using 1.7B LLM foundation, that give us hope
 to run it locally. However, in MacOS system, Pytorch transformers library lacks flash-attention implementation. And vllm and sglang 
 both don't support MacOS. And there's another hidden detail in this model, that is its NaViT architecure vision encoder has another 1.2B parameters and consuming VRAM amount grows exponentially with the size of the input image. Even with vllm in CUDA device, it's
 reported to requires at least 8GB VRAM to run.
