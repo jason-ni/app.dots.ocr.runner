@@ -16,7 +16,7 @@ language:
 ---
 
 
-# Run Dots.OCR locally with MacOS or Small GPU
+<h1 align="center"> Run Dots.OCR locally with MacOS or Small GPU </h1>
 
 **dots.ocr** is a powerful, multilingual document parser that unifies layout detection and content recognition within a single vision-language model while maintaining good reading order. The offical announced it's using 1.7B LLM foundation, that give us hope
 to run it locally. However, in MacOS system, Pytorch transformers library lacks flash-attention implementation. And vllm and sglang 
