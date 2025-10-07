@@ -1,20 +1,3 @@
----
-license: mit
-application_name: dots_ocr
-pipeline_tag: image-text-to-text
-tags:
-- image-to-text
-- ocr
-- document-parse
-- layout
-- table
-- formula
-language:
-- en
-- zh
-- multilingual
----
-
 
 <h1 align="center"> Run Dots.OCR locally with MacOS or Small GPU </h1>
 
