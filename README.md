@@ -10,4 +10,6 @@ reported to requires at least 8GB VRAM to run.
 
 **Available in App Store**
 
+Dots.OCR.Runner
+
 [![Alt dots.ocr.runner](assets/128x128.png)](https://apps.apple.com/us/app/dots-ocr-runner/id6753667495)
