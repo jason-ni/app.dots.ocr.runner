@@ -7,3 +7,7 @@ both don't support MacOS. And there's another hidden detail in this model, that 
 reported to requires at least 8GB VRAM to run.
 
 **Dots.OCR.Runner** is created to solve these problems. Leveraged with llama.cpp's efficient attention implemention and other related operators, the peak RAM consumption in MacOS can be under 3GB. The speed is also comparable to CUDA device. It may be a little slower, because the trick is actually trading space with time. But the high quality performance and privacy assurance make the cost worthwhile.
+
+**Available in App Store**
+
+[![Alt dots.ocr.runner](assets/128x128.png)](https://apps.apple.com/us/app/dots-ocr-runner/id6753667495)
