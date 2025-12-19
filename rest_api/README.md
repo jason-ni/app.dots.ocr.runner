@@ -20,16 +20,16 @@ pip install dotsocr-client
 ### From Source
 
 ```bash
-git clone https://github.com/dotsocr/dotsocr-runner.git
-cd dotsocr-runner/rest_api
+git clone https://github.com/jason-ni/app.dots.ocr.runner.git
+cd app.dots.ocr.runner/rest_api
 pip install -e .
 ```
 
 ### Development Installation
 
 ```bash
-git clone https://github.com/dotsocr/dotsocr-runner.git
-cd dotsocr-runner/rest_api
+git clone https://github.com/jason-ni/app.dots.ocr.runner.git
+cd app.dots.ocr.runner/rest_api
 pip install -e ".[dev]"
 ```
 
@@ -328,9 +328,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-- **Documentation**: [https://dotsocr-client.readthedocs.io/](https://dotsocr-client.readthedocs.io/)
-- **Issues**: [GitHub Issues](https://github.com/dotsocr/dotsocr-runner/issues)
-- **Email**: support@dotsocr.com
+- **Issues**: [GitHub Issues](https://github.com/jason-ni/app.dots.ocr.runner/issues)
 
 ## Changelog
 
@@ -348,11 +346,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - `requests>=2.28.0` (for sync client)
 - `aiohttp>=3.8.0` (for async client)
 
-## Roadmap
 
-- [ ] WebSocket support for real-time updates
-- [ ] File streaming for large files
-- [ ] Retry mechanisms with exponential backoff
-- [ ] Caching layer for repeated requests
-- [ ] Plugin system for custom processors
-- [ ] Integration with popular frameworks (FastAPI, Django, etc.)
