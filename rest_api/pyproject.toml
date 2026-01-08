@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dotsocr-runner-client"
-version = "1.0.0"
+version = "0.2.0"
 description = "Python client for DotsOCR REST API"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "DotsOCR Team", email = "support@dotsocr.com"}
+    {name = "Jason Ni", email = "support@aimt.club"}
 ]
 maintainers = [
-    {name = "DotsOCR Team", email = "support@dotsocr.com"}
+    {name = "Jason Ni", email = "support@aimt.club"}
 ]
 keywords = ["ocr", "optical character recognition", "api client", "rest api", "image processing", "pdf"]
 classifiers = [
@@ -53,13 +53,9 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/dotsocr/dotsocr-runner"
-Documentation = "https://dotsocr-client.readthedocs.io/"
-Repository = "https://github.com/dotsocr/dotsocr-runner.git"
-"Bug Reports" = "https://github.com/dotsocr/dotsocr-runner/issues"
-
-[project.scripts]
-dotsocr-runner-client = "dotsocr_runner_client.cli:main"
+Homepage = "https://github.com/jason-ni/app.dots.ocr.runner"
+Repository = "https://github.com/jason-ni/app.dots.ocr.runner"
+"Bug Reports" = "https://github.com/jason-ni/app.dots.ocr.runner/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

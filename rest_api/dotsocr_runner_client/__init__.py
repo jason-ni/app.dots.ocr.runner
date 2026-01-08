@@ -81,7 +81,20 @@ from .models import (
     ExportFormat,
     MarkdownExportMode,
     MarkdownExportRequest,
-    MarkdownExportResponse
+    MarkdownExportResponse,
+    ImageBinaryResponse,
+    # Bbox OCR models
+    BboxOcrRequest,
+    BboxOcrResponse,
+    StoreOcrResultRequest,
+    StoreOcrResultResponse,
+    # Complete OCR models
+    CompleteOcrResponse,
+    # Embed Document models
+    EmbedDocumentResponse,
+    # Semantic Query models
+    SemanticQueryResponse,
+    SemanticQueryResult
 )
 
 # Import exceptions
@@ -154,6 +167,19 @@ __all__ = [
     "MarkdownExportMode",
     "MarkdownExportRequest",
     "MarkdownExportResponse",
+    "ImageBinaryResponse",
+    # Bbox OCR models
+    "BboxOcrRequest",
+    "BboxOcrResponse",
+    "StoreOcrResultRequest",
+    "StoreOcrResultResponse",
+    # Complete OCR models
+    "CompleteOcrResponse",
+    # Embed Document models
+    "EmbedDocumentResponse",
+    # Semantic Query models
+    "SemanticQueryResponse",
+    "SemanticQueryResult",
     
     # Exceptions
     "DotsOCRRunnerClientError",

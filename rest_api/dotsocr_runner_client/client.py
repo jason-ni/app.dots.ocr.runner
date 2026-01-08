@@ -16,7 +16,16 @@ from .models import (
     DeleteDocumentResponse, ExportResponse, PaginationInfo,
     DocumentContent, PageContent, ImageContent, DocumentSpecificMeta,
     DocumentType, ProcessingStatus, SortField, SortOrder, SearchScope, ExportFormat,
-    MarkdownExportMode, MarkdownExportRequest, MarkdownExportResponse
+    MarkdownExportMode, MarkdownExportRequest, MarkdownExportResponse,
+    ImageBinaryResponse,
+    # Bbox OCR models
+    BboxOcrRequest, BboxOcrResponse, StoreOcrResultRequest, StoreOcrResultResponse,
+    # Complete OCR models
+    CompleteOcrResponse,
+    # Embed Document models
+    EmbedDocumentResponse,
+    # Semantic Query models
+    SemanticQueryResponse, SemanticQueryResult
 )
 from .exceptions import (
     DotsOCRRunnerClientError, AuthenticationError, TaskNotFoundError,
@@ -845,6 +854,286 @@ class DotsOCRRunnerClient:
                 image_names=data.get('image_names'),
                 content_type=data['content_type'],
                 generated_at=data['generated_at']
+            )
+        except (KeyError, ValueError) as e:
+            raise APIError(f"Invalid response format: {e}") from e
+    
+    def get_image_binary(self, content_hash: str, id: int, dpi: int) -> ImageBinaryResponse:
+        """
+        Get binary image data from a document.
+        
+        Args:
+            content_hash: Document content hash
+            id: Page number (for PDF) or image ID (for images)
+            dpi: DPI for image scaling (72-200)
+            
+        Returns:
+            ImageBinaryResponse with binary data and content type
+            
+        Raises:
+            ValueError: If DPI is not in valid range
+            APIError: For API errors
+        """
+        # Validate DPI range (72-200)
+        if not (72 <= dpi <= 200):
+            raise ValueError("DPI must be between 72 and 200")
+        
+        # Prepare request body
+        request_data = {
+            'dpi': dpi
+        }
+        
+        # Make request - this endpoint returns binary data, not JSON
+        url = f"/api/v1/documents/{content_hash}/parts/{id}"
+        
+        try:
+            response = self.session.request(
+                'POST',
+                f"{self.base_url}{url}",
+                json=request_data,
+                timeout=self.timeout
+            )
+            
+            # Handle authentication errors
+            if response.status_code == 401:
+                raise AuthenticationError("Authentication failed")
+            
+            # Handle other HTTP errors
+            if not response.ok:
+                try:
+                    error_data = response.json()
+                    message = error_data.get('error', {}).get('message', response.text)
+                except (ValueError, KeyError):
+                    message = response.text
+                
+                raise APIError(
+                    f"API request failed: {message}",
+                    status_code=response.status_code
+                )
+            
+            # Get content type from headers
+            content_type = response.headers.get('Content-Type', 'image/png')
+            
+            # Return binary response
+            return ImageBinaryResponse(
+                bytes=response.content,
+                content_type=content_type
+            )
+            
+        except requests.exceptions.ConnectionError as e:
+            raise ConnectionError(f"Failed to connect to server: {e}") from e
+        except requests.exceptions.Timeout as e:
+            raise TimeoutError(f"Request timed out: {e}") from e
+        except requests.exceptions.RequestException as e:
+            raise APIError(f"Request failed: {e}") from e
+    
+    def ocr_on_bbox(self, content_hash: str, page_num: int, dpi: int, bbox: List[int],
+                   image_id: Optional[int] = None) -> BboxOcrResponse:
+        """
+        Perform OCR on a bounding box within a document.
+        
+        Args:
+            content_hash: Document content hash
+            page_num: Page number (for PDF documents)
+            dpi: DPI for image scaling (72-200)
+            bbox: Bounding box as [x, y, width, height] in original image coordinates
+            image_id: Image ID (for images documents, optional)
+            
+        Returns:
+            BboxOcrResponse with OCR results
+            
+        Raises:
+            ValueError: If DPI is not in valid range or bbox is invalid
+            APIError: For API errors
+        """
+        # Validate DPI range (72-200)
+        if not (72 <= dpi <= 200):
+            raise ValueError("DPI must be between 72 and 200")
+        
+        # Validate bbox format
+        if len(bbox) != 4:
+            raise ValueError("bbox must have exactly 4 elements: [x, y, width, height]")
+        if bbox[2] <= 0 or bbox[3] <= 0:
+            raise ValueError("bbox width and height must be positive")
+        
+        # Prepare request body
+        request_data = {
+            'content_hash': content_hash,
+            'page_num': page_num,
+            'dpi': dpi,
+            'bbox': bbox
+        }
+        
+        if image_id is not None:
+            request_data['image_id'] = image_id
+        
+        response = self._make_request('POST', f'/api/v1/documents/{content_hash}/ocr_on_bbox', json=request_data)
+        data = response.json()
+        
+        try:
+            return BboxOcrResponse(
+                success=data.get('success', False),
+                error_msg=data.get('error_msg'),
+                ocr_result=data.get('ocr_result')
+            )
+        except (KeyError, ValueError) as e:
+            raise APIError(f"Invalid response format: {e}") from e
+    
+    def store_ocr_result(self, content_hash: str, page_num: int, 
+                        ocr_result: List[Dict[str, Any]]) -> StoreOcrResultResponse:
+        """
+        Store OCR result for a page.
+        
+        Args:
+            content_hash: Document content hash
+            page_num: Page number
+            ocr_result: List of OCR results with bbox and text
+            
+        Returns:
+            StoreOcrResultResponse with storage status
+            
+        Raises:
+            APIError: For API errors
+        """
+        # Prepare request body
+        request_data = {
+            'content_hash': content_hash,
+            'page_num': page_num,
+            'ocr_result': ocr_result
+        }
+        
+        response = self._make_request('POST', f'/api/v1/documents/{content_hash}/store_ocr_result', json=request_data)
+        data = response.json()
+        
+        try:
+            return StoreOcrResultResponse(
+                success=data.get('success', False),
+                error_msg=data.get('error_msg')
+            )
+        except (KeyError, ValueError) as e:
+            raise APIError(f"Invalid response format: {e}") from e
+    
+    def complete_ocr(self, content_hash: str) -> CompleteOcrResponse:
+        """
+        Complete OCR task for a document.
+        
+        This endpoint marks OCR task as completed, updating to document status
+        to "Completed" and counting successful OCR results to update repository metadata.
+        
+        Args:
+            content_hash: Document content hash
+            
+        Returns:
+            CompleteOcrResponse with completion status
+            
+        Raises:
+            APIError: For API errors
+        """
+        response = self._make_request('POST', f'/api/v1/documents/{content_hash}/ocr/complete', json={})
+        data = response.json()
+        
+        try:
+            return CompleteOcrResponse(
+                success=data.get('success', False),
+                error_msg=data.get('error_msg')
+            )
+        except (KeyError, ValueError) as e:
+            raise APIError(f"Invalid response format: {e}") from e
+    
+    def embed_document(self, content_hash: str) -> EmbedDocumentResponse:
+        """
+        Generate vector embeddings for a document.
+        
+        This endpoint creates a background task to generate embeddings
+        for all pages/images in the document. The embeddings are
+        generated per-page/per-image for better semantic search granularity.
+        
+        Args:
+            content_hash: Document content hash
+            
+        Returns:
+            EmbedDocumentResponse with task ID and status
+            
+        Raises:
+            APIError: For API errors
+        """
+        response = self._make_request('POST', f'/api/v1/document/{content_hash}/embedding')
+        data = response.json()
+        
+        try:
+            return EmbedDocumentResponse(
+                success=data.get('success', False),
+                task_id=data.get('task_id', ''),
+                status=data.get('status', ''),
+                message=data.get('message')
+            )
+        except (KeyError, ValueError) as e:
+            raise APIError(f"Invalid response format: {e}") from e
+    
+    def semantic_query(self, query_text: str, limit: Optional[int] = None,
+                    content_hash: Optional[str] = None,
+                    page_or_image_id: Optional[int] = None) -> SemanticQueryResponse:
+        """
+        Perform semantic search on documents using vector embeddings.
+        
+        This endpoint accepts a text query, generates an embedding for it,
+        and searches for similar document chunks in the embeddings database.
+        
+        Args:
+            query_text: The text query to search for similar content
+            limit: Maximum number of results to return (default: 10, max: 100)
+            content_hash: Optional filter by document content hash
+            page_or_image_id: Optional filter by page number (PDF) or image ID
+            
+        Returns:
+            SemanticQueryResponse with search results
+            
+        Raises:
+            ValueError: If query text is empty
+            APIError: For API errors
+        """
+        # Validate query text
+        if not query_text or not query_text.strip():
+            raise ValueError("Query text cannot be empty")
+        
+        # Prepare request body
+        request_data = {
+            'text': query_text.strip()
+        }
+        
+        # Add optional parameters
+        if limit is not None:
+            request_data['limit'] = min(limit, 100)  # Enforce max limit of 100
+        
+        if content_hash:
+            request_data['content_hash'] = content_hash
+        
+        if page_or_image_id is not None:
+            request_data['page_or_image_id'] = page_or_image_id
+        
+        response = self._make_request('POST', '/api/v1/documents/query/semantic', json=request_data)
+        data = response.json()
+        
+        try:
+            # Parse results
+            results = []
+            for result_data in data.get('results', []):
+                result = SemanticQueryResult(
+                    content_hash=result_data['content_hash'],
+                    page_or_image_id=result_data['page_or_image_id'],
+                    chunk_index=result_data['chunk_index'],
+                    chunk_text=result_data.get('chunk_text'),
+                    distance=result_data['distance'],
+                    document_name=result_data.get('document_name'),
+                    document_type=result_data.get('document_type')
+                )
+                results.append(result)
+            
+            return SemanticQueryResponse(
+                query=data['query'],
+                results=results,
+                total_count=data.get('total_count', len(results)),
+                queried_at=data['queried_at']
             )
         except (KeyError, ValueError) as e:
             raise APIError(f"Invalid response format: {e}") from e

@@ -357,3 +357,94 @@ class ExportResponse:
     content: bytes
     content_type: str
     filename: str
+
+
+@dataclass
+class ImageBinaryResponse:
+    """Response from image binary endpoint."""
+    bytes: bytes
+    content_type: str
+
+
+# Bbox OCR Models
+
+@dataclass
+class BboxOcrRequest:
+    """Request for OCR on bounding box."""
+    content_hash: str
+    page_num: int  # Required for PDF
+    image_id: Optional[int] = None  # Required for images
+    dpi: int = 150  # Required, 72-200
+    bbox: List[int] = None  # [x, y, width, height]
+    
+    def __post_init__(self):
+        """Validate bbox after initialization."""
+        if self.bbox is not None:
+            if len(self.bbox) != 4:
+                raise ValueError("bbox must have exactly 4 elements: [x, y, width, height]")
+            if self.bbox[2] <= 0 or self.bbox[3] <= 0:
+                raise ValueError("bbox width and height must be positive")
+
+
+@dataclass
+class BboxOcrResponse:
+    """Response from OCR on bounding box endpoint."""
+    success: bool
+    error_msg: Optional[str] = None
+    ocr_result: Optional[List[Dict[str, Any]]] = None
+
+
+@dataclass
+class StoreOcrResultRequest:
+    """Request for storing OCR result for a page."""
+    content_hash: str
+    page_num: int
+    ocr_result: List[Dict[str, Any]]
+
+
+@dataclass
+class StoreOcrResultResponse:
+    """Response from store OCR result endpoint."""
+    success: bool
+    error_msg: Optional[str] = None
+
+
+@dataclass
+class CompleteOcrResponse:
+    """Response from complete OCR endpoint."""
+    success: bool
+    error_msg: Optional[str] = None
+
+
+# Embed Document Models
+
+@dataclass
+class EmbedDocumentResponse:
+    """Response from embed document endpoint."""
+    success: bool
+    task_id: str
+    status: str
+    message: Optional[str] = None
+
+
+# Semantic Query Models
+
+@dataclass
+class SemanticQueryResult:
+    """Result from semantic query endpoint."""
+    content_hash: str
+    page_or_image_id: int
+    chunk_index: int
+    chunk_text: Optional[str] = None
+    distance: float = 1000.0
+    document_name: Optional[str] = None
+    document_type: Optional[str] = None
+
+
+@dataclass
+class SemanticQueryResponse:
+    """Response from semantic query endpoint."""
+    query: str
+    results: List[SemanticQueryResult]
+    total_count: int
+    queried_at: str
